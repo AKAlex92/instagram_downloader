@@ -46,7 +46,8 @@ class Insta
 
 	function validate($str)
 	{
-		$output = str_replace(" ", "", $str);
+		$output = str_replace(" ", "_", $str);
+		$output = str_replace(".", "", $str);
 		return $output;
 	}
 
