@@ -70,7 +70,7 @@ if(isset($_SESSION['return']['errors']) && count($_SESSION['return']['errors']) 
 				$("#alert_error").show();
 				$("#alert_error").removeClass('d-none');
 				$("#alert_error").html('<?php echo $errors_msg; ?>');
-				$("#alert_error").fadeTo(2000, 500).slideUp(500, function(){
+				$("#alert_error").fadeTo(5000, 500).slideUp(500, function(){
 					$("#alert_error").slideUp(500);
 					$("#alert_error").html('');
 				});
