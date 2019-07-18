@@ -46,8 +46,14 @@ class Insta
 
 	function validate($str)
 	{
-		$output = str_replace(" ", "_", $str);
-		$output = str_replace(".", "", $str);
+		$max_chars = 50;
+		$arr_replace = array(" " => "_", "." => "");
+		$output = $str;
+		foreach ($arr_replace as $what => $with) 
+		{
+			$output = str_replace($what, $with, $output);
+		}
+		$output = substr($output, 0, $max_chars);
 		return $output;
 	}
 
