@@ -5,7 +5,8 @@ class Insta
 	{
 		// $this->link = ($this->validate_url($url) === true ? $url : "");
 		$this->link = $url;
-		$this->image = "";
+		$this->is_video = false;
+		$this->data = "";
 		$this->title = "";
 		$this->output = array(); // output = array('errors' [array], 'messages' [array], 'warnings' [array])
 	}
@@ -20,7 +21,15 @@ class Insta
 	{
 		$this->validate_url($this->link);
 		$html = file_get_contents($this->link);
-		$this->image = $this->get_image($html);
+		$this->is_video = $this->what_type_of_file($html);
+		if($this->is_video)
+		{
+			$this->data = $this->get_video($html);
+		}
+		else
+		{
+			$this->data = $this->get_image($html);
+		}
 		$this->title = $this->get_caption($html);
 		$this->header_download();
 		// 
@@ -47,7 +56,7 @@ class Insta
 	function validate($str)
 	{
 		$max_chars = 50;
-		$arr_replace = array(" " => "_", "." => "");
+		$arr_replace = array(" " => "_", "." => "", "\n" => "");
 		$output = $str;
 		foreach ($arr_replace as $what => $with) 
 		{
@@ -70,11 +79,28 @@ class Insta
 		return $correct;
 	}
 
+	function what_type_of_file($code)
+	{
+		$parsed = $this->get_string_between($code, '<script type="text/javascript">window._sharedData = ', ';</script>');
+		$moreinfo = json_decode($parsed);
+		$type = $moreinfo->entry_data->PostPage[0]->graphql->shortcode_media->is_video;
+		return $type;
+	}
+
 	function get_image($code)
 	{
 		$parsed = $this->get_string_between($code, '<script type="text/javascript">window._sharedData = ', ';</script>');
 		$moreinfo = json_decode($parsed);
-		$img = $moreinfo->entry_data->PostPage[0]->graphql->shortcode_media->display_url;
+		$vid = $moreinfo->entry_data->PostPage[0]->graphql->shortcode_media->display_url;
+		$raw_vid = file_get_contents($vid);
+		return $raw_vid;
+	}
+
+	function get_video($code)
+	{
+		$parsed = $this->get_string_between($code, '<script type="text/javascript">window._sharedData = ', ';</script>');
+		$moreinfo = json_decode($parsed);
+		$img = $moreinfo->entry_data->PostPage[0]->graphql->shortcode_media->video_url;
 		$raw_img = file_get_contents($img);
 		return $raw_img;
 	}
@@ -89,19 +115,24 @@ class Insta
 
 	function header_download($mime = "image/jpeg")
 	{
-		if($this->image != "" && count($this->output['errors']) == 0)
+		if($this->data != "" && count($this->output['errors']) == 0)
 		{
 			$ext = "jpg";
+			if($this->is_video)
+			{
+				$mime = "video/mp4";
+				$ext = "mp4";
+			}
 			if($this->title == "")
 			{
 				$this->title = time();
 			}
 			// TO IMPLEMENT AFTER: https://www.php.net/manual/en/function.image-type-to-mime-type.php
-			// Set the content type header - in this case image/jpeg
+			// Set the content type header - in this case image/jpeg;
 			header('Content-Type: ' . $mime);
 			// It will be called title.jpg
 			header('Content-Disposition: attachment; filename="'.$this->title.'.' . $ext .'"');
-			echo $this->image;
+			echo $this->data;
 			return;
 		}
 	}

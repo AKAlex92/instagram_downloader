@@ -47,7 +47,7 @@ if(isset($_SESSION['return']['errors']) && count($_SESSION['return']['errors']) 
 				<form method="POST" action="index.php">
 					<div class="form-group">
 						<label for="url">Instagram Link:</label>
-						<input type="text" name="url" id="url" class="form-control" placeholder="Instagram Link" value="">
+						<input type="text" name="url" id="url" class="form-control" placeholder="Instagram Link" value="https://www.instagram.com/p/B0TEoB4lhUA/?utm_source=ig_web_copy_link">
 						<small class="form-text text-muted">Example: https://www.instagram.com/p/Bz_RdN5iuwk/?utm_source=ig_web_button_share_sheet</small>
 					</div>
 					<input type="submit" class="btn btn-primary" value="Download">
