@@ -127,6 +127,9 @@ class Insta
 			{
 				$this->title = time();
 			}
+
+			var_dump($_SERVER);
+			die();
 			// TO IMPLEMENT AFTER: https://www.php.net/manual/en/function.image-type-to-mime-type.php
 			// Set the content type header - in this case image/jpeg;
 			header('Content-Type: ' . $mime);
