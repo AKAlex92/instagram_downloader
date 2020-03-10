@@ -44,14 +44,16 @@ if(isset($_SESSION['return']['errors']) && count($_SESSION['return']['errors']) 
 				<p class="lead">This utility is useful to download instagram picture from a shared link.
 				<br>
 				Enter a valid instagram url link with the picture you wish to download and see the magic happens!</p>
-				<form method="POST" action="index.php">
+				<form id="frm_download" method="POST" action="index.php">
 					<div class="form-group">
 						<label for="url">Instagram Link:</label>
-						<input type="text" name="url" id="url" class="form-control" placeholder="Instagram Link" value="">
+						<input type="text" name="url" id="url" class="form-control" placeholder="Instagram Link" value="https://www.instagram.com/p/Bz_RdN5iuwk/?utm_source=ig_web_button_share_sheet">
 						<small class="form-text text-muted">Example: https://www.instagram.com/p/Bz_RdN5iuwk/?utm_source=ig_web_button_share_sheet</small>
 					</div>
 					<input type="submit" class="btn btn-primary" value="Download">
 				</form>
+				<br>
+				<a id="link"></a>
 				<br>
 				<div id="alert_error" class="alert alert-danger d-none" role="alert"></div>
 			</div>
@@ -80,5 +82,41 @@ if(isset($_SESSION['return']['errors']) && count($_SESSION['return']['errors']) 
 		<?php
 		}
 		?>
+		<script>
+		$(document).ready(function () {
+			//
+		});
+
+		$("form#frm_download").submit(function (e){
+			e.preventDefault();
+			var form_fields = $(this).serialize();
+
+			$.ajax({
+				url: 'download.php',
+				method: 'POST',
+				data: form_fields,
+				async: false,
+				dataType: 'json'
+			}).done(function(response) {
+				console.log('done');
+				console.log(response);
+				//
+				const a = $("a#link");
+				// $(a).css('display', 'block');
+				// $(a).attr('id', 'link');
+				$(a).attr("href", "data:application/octet-stream;base64," + encodeURIComponent(response.data));
+				$(a).attr("download", response.filename);
+				$(a).attr("target", "_blank");
+				$(a).text("Download " + response.title);
+			}).fail(function() {
+				// 
+				console.log('fail');
+			}).always(function() {
+				console.log('always');
+			});
+			$("a#link").click();
+		});
+		</script>
+
 	</body>
 </html>

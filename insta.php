@@ -8,6 +8,7 @@ class Insta
 		$this->is_video = false;
 		$this->data = "";
 		$this->title = "";
+		$this->filename = "";
 		$this->output = array(); // output = array('errors' [array], 'messages' [array], 'warnings' [array])
 	}
 
@@ -31,7 +32,9 @@ class Insta
 			$this->data = $this->get_image($html);
 		}
 		$this->title = $this->get_caption($html);
-		$this->header_download();
+		// $this->header_download();
+		// $this->header_download_specific();
+		$this->header_download_jquery();
 		// 
 		return;
 	}
@@ -113,6 +116,31 @@ class Insta
 		return $title;
 	}
 
+	function header_download_jquery($mime = "image/jpeg")
+	{
+		if($this->data != "" && count($this->output['errors']) == 0)
+		{
+			$output_json = array();
+			$ext = "jpg";
+			if($this->is_video)
+			{
+				$mime = "video/mp4";
+				$ext = "mp4";
+			}
+			if($this->title == "")
+			{
+				$this->title = time();
+			}
+			$this->filename = $this->title.'.' . $ext;
+			$output_json['data'] = base64_encode($this->data);
+			$output_json['filename'] = $this->filename;
+			$output_json['mime'] = $mime;
+			$output_json['title'] = $this->title;
+			echo json_encode($output_json);
+			return;
+		}
+	}
+
 	function header_download($mime = "image/jpeg")
 	{
 		if($this->data != "" && count($this->output['errors']) == 0)
@@ -127,14 +155,125 @@ class Insta
 			{
 				$this->title = time();
 			}
+			$this->filename = $this->title.'.' . $ext;
 			// TO IMPLEMENT AFTER: https://www.php.net/manual/en/function.image-type-to-mime-type.php
 			// Set the content type header - in this case image/jpeg;
 			header('Content-Type: ' . $mime);
+			// header("Cache-Control: no-store, no-cache");  
 			// It will be called title.jpg
-			header('Content-Disposition: attachment; filename="'.$this->title.'.' . $ext .'"');
+			header('Content-Disposition: attachment; filename="'. $this->filename .'"');
 			echo $this->data;
 			return;
 		}
+	}
+
+	function header_download_specific($mime = "image/jpeg")
+	{
+		if($this->data != "" && count($this->output['errors']) == 0)
+		{
+			$ext = "jpg";
+			if($this->is_video)
+			{
+				$mime = "video/mp4";
+				$ext = "mp4";
+			}
+			if($this->title == "")
+			{
+				$this->title = time();
+			}
+			$this->filename = $this->title.'.' . $ext;
+			// TO IMPLEMENT AFTER: https://www.php.net/manual/en/function.image-type-to-mime-type.php
+			// Set the content type header - in this case image/jpeg;
+			if(!$this->isIphone() && false)
+			{
+				header('Content-Type: ' . $mime);
+				// header("Cache-Control: no-store, no-cache");  
+				// It will be called title.jpg
+				header('Content-Disposition: attachment; filename="'. $this->filename .'"');
+				echo $this->data;
+			}
+			else
+			{
+			?>
+			<a id="link" href="#0">No download yet</a>
+			<script  src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+			<script>
+			$("#link")
+				.attr("href", "data:application/octet-stream;base64," + encodeURIComponent('<?php echo base64_encode($this->data); ?>'))
+				.attr("download", "<?php echo $this->filename; ?>")
+				.attr("target", "_blank")
+				.text("Download <?php echo $this->filename; ?>");
+			/*
+			fetch('<?php echo $this->file; ?>')
+			.then(resp => resp.blob())
+			.then(blob => {
+				const url = window.URL.createObjectURL(blob);
+				const a = document.createElement('a');
+				a.style.display = 'none';
+				a.href = url;
+				// the filename you want
+				a.download = '<?php echo $this->file; ?>';
+				document.body.appendChild(a);
+				a.click();
+				window.URL.revokeObjectURL(url);
+				alert('your file has downloaded!'); // or you know, something with better UX...
+			})
+			.catch(() => alert('oh no!'));
+			*/
+			/*
+				var blob;
+				blob = new Blob(['<?php echo base64_encode($this->data); ?>'], { type: "application/octet-stream" });
+
+				$(document).ready(function() {
+					$("#link")
+						.attr("href", URL.createObjectURL(blob))
+						.attr("download", "<?php echo $file; ?>")
+						.attr("target", "_blank")
+						.text("Download <?php echo $file; ?>"); 
+				});
+				*/
+			</script>
+			<?php
+				/*
+				header('Content-Disposition: attachment; filename="'.basename($file).'"' );
+				header("Content-Length: " . filesize($file));
+				header("Content-Type: application/octet-stream;");
+				// header("Location: " . $file);
+				// $file = "photo.jpg";
+				// header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+				// header("Cache-Control: post-check=0, pre-check=0", false);
+				// header("Pragma: no-cache");
+				// header("Content-Description:  File Transfer");
+				// header("Content-type:  " . $mime);
+				// header("Content-Disposition:  attachment; filename=\"".$file."\"");
+				// header("Content-Transfer-Encoding:  binary");
+				// header("Content-Length:  ".filesize($file));
+				// header("Upgrade-Insecure-Requests:  1");
+				// ob_end_flush();
+				@readfile($file);
+				*/
+				exit;
+			}
+			die();
+			return;
+		}
+	}
+
+	function isIphone()
+	{
+		$isApple = false;
+		//Detect special conditions devices
+		$iPod    = stripos($_SERVER['HTTP_USER_AGENT'],"iPod");
+		$iPhone  = stripos($_SERVER['HTTP_USER_AGENT'],"iPhone");
+		$iPad    = stripos($_SERVER['HTTP_USER_AGENT'],"iPad");
+		$Android = stripos($_SERVER['HTTP_USER_AGENT'],"Android");
+		$webOS   = stripos($_SERVER['HTTP_USER_AGENT'],"webOS");
+
+		if($iPhone || $iPad || $iPod)
+		{
+			$isApple = true;
+		}
+		return $isApple; 
 	}
 
 	function create_error($msg, $error_code = 0)
